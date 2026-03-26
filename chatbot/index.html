@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Task Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        .section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        .task-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .task-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .task-input button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .task-input button:hover {
+            background: #2980b9;
+        }
+
+        .task-list, .schedule-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .task-item, .schedule-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-item:last-child, .schedule-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-priority {
+            padding: 2px 8px;
+            border-radius: 3px;
+            color: white;
+            font-size: 0.8em;
+        }
+
+        .priority-high { background: #e74c3c; }
+        .priority-medium { background: #f39c12; }
+        .priority-low { background: #27ae60; }
+
+        .schedule-time {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .refresh-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .refresh-btn:hover {
+            background: #7f8c8d;
+        }
+
+        .loading {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fdf2f2;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Task Manager</h1>
+            <p>Manage your tasks intelligently with AI-powered scheduling</p>
+        </div>
+
+        <div class="content">
+            <!-- Add Tasks Section -->
+            <div class="section">
+                <h3>➕ Add Tasks</h3>
+                <div class="task-input">
+                    <input type="text" id="taskMessage" placeholder="Describe your tasks (e.g., 'Prepare presentation for tomorrow, study for 2 hours, buy groceries')" />
+                    <button onclick="addTasks()">Add Tasks</button>
+                </div>
+                <div id="addResult"></div>
+            </div>
+
+            <!-- Current Tasks Section -->
+            <div class="section">
+                <h3>📋 Current Tasks <button class="refresh-btn" onclick="loadTasks()">Refresh</button></h3>
+                <div id="tasksContainer">
+                    <div class="loading">Loading tasks...</div>
+                </div>
+            </div>
+
+            <!-- Schedule Section -->
+            <div class="section">
+                <h3>📅 Schedule <button class="refresh-btn" onclick="loadSchedule()">Refresh</button></h3>
+                <div id="scheduleContainer">
+                    <div class="loading">Loading schedule...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000";
+
+        // Load initial data
+        window.onload = function() {
+            loadTasks();
+            loadSchedule();
+        };
+
+        async function addTasks() {
+            const input = document.getElementById("taskMessage");
+            const message = input.value.trim();
+
+            if (!message) {
+                showAddResult("Please enter a task description", "error");
+                return;
+            }
+
+            const resultDiv = document.getElementById("addResult");
+            resultDiv.innerHTML = '<div class="loading">Processing with AI...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/add_tasks`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showAddResult(`Error: ${data.error}`, "error");
+                    return;
+                }
+
+                input.value = "";
+                showAddResult(`✅ Added ${data.tasks_added.length} task(s) successfully!`, "");
+
+                // Refresh tasks and schedule
+                loadTasks();
+                loadSchedule();
+
+            } catch (error) {
+                showAddResult("⚠️ Server error: " + error.message, "error");
+            }
+        }
+
+        function showAddResult(message, className) {
+            const resultDiv = document.getElementById("addResult");
+            resultDiv.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+
+        async function loadTasks() {
+            const container = document.getElementById("tasksContainer");
+            container.innerHTML = '<div class="loading">Loading tasks...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/tasks`);
+                const tasks = await response.json();
+
+                if (tasks.length === 0) {
+                    container.innerHTML = '<p>No tasks yet. Add some tasks above!</p>';
+                    return;
+                }
+
+                let html = '<div class="task-list">';
+                tasks.forEach(task => {
+                    const deadline = new Date(task.deadline).toLocaleString();
+                    const priorityClass = `priority-${task.priority}`;
+                    html += `
+                        <div class="task-item">
+                            <div class="task-info">
+                                <strong>${task.task}</strong><br>
+                                <small>Duration: ${task.duration_hours}h | Deadline: ${deadline}</small>
+                            </div>
+                            <span class="task-priority ${priorityClass}">${task.priority.toUpperCase()}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = '<div class="error">Failed to load tasks</div>';
+            }
+        }
+
+        async function loadSchedule() {
+            const container = document.getElementById("scheduleContainer");
+            container.innerHTML = '<div class="loading">Loading schedule...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/schedule`);
+                const schedule = await response.json();
+
+                if (schedule.length === 0) {
+                    container.innerHTML = '<p>No schedule available. Add some tasks first!</p>';
+                    return;
+                }
+
+                let html = '<div class="schedule-list">';
+                schedule.forEach(item => {
+                    const priorityClass = `priority-${item.priority}`;
+                    html += `
+                        <div class="schedule-item">
+                            <div class="task-info">
+                                <div class="schedule-time">${item.start} → ${item.end}</div>
+                                <strong>${item.task}</strong>
+                            </div>
+                            <span class="task-priority ${priorityClass}">${item.priority.toUpperCase()}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = '<div class="error">Failed to load schedule</div>';
+            }
+        }
+
+        // Enter key support for task input
+        document.getElementById("taskMessage").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                addTasks();
+            }
+        });
+    </script>
+</body>
+</html>
+
+</body>
+</html>
