@@ -25,6 +25,6 @@ let taskSchema = mongoose.Schema({
     }
 })
 
-let task = mongoose.model('task' , userSchema)
+let task = mongoose.model('task' , taskSchema)
 
 module.exports = task;
