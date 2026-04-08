@@ -26,6 +26,11 @@ function sortTasks(tasks) {
     return [...tasks].sort((a, b) => {
         const priorityDiff = PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority];
         if (priorityDiff !== 0) return priorityDiff;
+
+        const aDeadline = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const bDeadline = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        if (aDeadline !== bDeadline) return aDeadline - bDeadline;
+
         return new Date(b.createdAt) - new Date(a.createdAt);
     });
 }
@@ -159,11 +164,11 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(false);
     const [taskError, setTaskError] = useState("");
-    const [form, setForm] = useState({ title: "", description: "", priority: "Medium" });
+    const [form, setForm] = useState({ title: "", description: "", priority: "Medium", deadline: "" });
     const [saving, setSaving] = useState(false);
     const [filterPriority, setFilterPriority] = useState("All");
     const [editingTask, setEditingTask] = useState(null);
-    const [editForm, setEditForm] = useState({ title: "", description: "", priority: "Medium" });
+    const [editForm, setEditForm] = useState({ title: "", description: "", priority: "Medium", deadline: "" });
 
     useEffect(() => {
         async function loadTasks() {
@@ -187,10 +192,20 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
     const taskCount = tasks.length;
     const completedCount = tasks.filter((task) => task.isCompleted).length;
     const pendingCount = taskCount - completedCount;
+    const overdueCount = tasks.filter((task) => {
+        if (task.isCompleted) return false;
+        if (!task.deadline) return false;
+        return new Date(task.deadline) < new Date();
+    }).length;
     const completionRate = taskCount ? Math.round((completedCount / taskCount) * 100) : 0;
+    const inProgressCount = Math.max(0, taskCount - completedCount - overdueCount);
+    const progressArcLength = 2 * Math.PI * 100;
+    const progressDashOffset = progressArcLength * (1 - completionRate / 100);
     const now = new Date();
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const calendarDay = now.getDate();
+    const calendarDayName = dayNames[now.getDay()];
     const calendarMonth = monthNames[now.getMonth()];
     const calendarYear = now.getFullYear();
     const sortedTasks = useMemo(() => sortTasks(tasks), [tasks]);
@@ -214,6 +229,7 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
             title: task.title,
             description: task.description || "",
             priority: task.priority || "Medium",
+            deadline: task.deadline || "",
         });
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -236,10 +252,11 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
                 title: editForm.title.trim(),
                 description: editForm.description.trim(),
                 priority: editForm.priority,
+                deadline: editForm.deadline,
             });
             setTasks((current) => sortTasks(current.map((item) => (item.id === updatedTask.id ? updatedTask : item))));
             setEditingTask(null);
-            setEditForm({ title: "", description: "", priority: "Medium" });
+            setEditForm({ title: "", description: "", priority: "Medium", deadline: "" });
         } catch (error) {
             setTaskError(error.message);
         } finally {
@@ -249,7 +266,7 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
 
     const handleCancelEdit = () => {
         setEditingTask(null);
-        setEditForm({ title: "", description: "", priority: "Medium" });
+        setEditForm({ title: "", description: "", priority: "Medium", deadline: "" });
         setTaskError("");
     };
 
@@ -267,9 +284,10 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
                 title: form.title.trim(),
                 description: form.description.trim(),
                 priority: form.priority,
+                deadline: form.deadline,
             });
             setTasks((current) => sortTasks([newTask, ...current]));
-            setForm({ title: "", description: "", priority: "Medium" });
+            setForm({ title: "", description: "", priority: "Medium", deadline: "" });
         } catch (error) {
             setTaskError(error.message);
         } finally {
@@ -317,32 +335,69 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
 
             <section className="dashboard-stats">
                 <article className="stat-card">
-                    <span className="stat-label">Total tasks</span>
+                    <span className="stat-label">Total Projects</span>
                     <strong>{taskCount}</strong>
                 </article>
                 <article className="stat-card">
-                    <span className="stat-label">Completed</span>
+                    <span className="stat-label">Ended Projects</span>
                     <strong>{completedCount}</strong>
                 </article>
                 <article className="stat-card">
-                    <span className="stat-label">Pending</span>
+                    <span className="stat-label">Running Projects</span>
                     <strong>{pendingCount}</strong>
+                </article>
+                <article className="stat-card overdue-card">
+                    <span className="stat-label">Overdue Projects</span>
+                    <strong>{overdueCount}</strong>
                 </article>
             </section>
 
-            <section className="completion-summary">
-                <div className="completion-card">
-                    <div className="progress-circle" style={{ '--progress': `${completionRate}%` }}>
+            <section className="completion-summary project-progress-card">
+                <div className="progress-chart-wrapper">
+                    <svg viewBox="0 0 200 200" className="progress-chart" aria-hidden="true">
+                        <circle
+                            cx="100"
+                            cy="100"
+                            r="80"
+                            className="progress-track"
+                        />
+                        <circle
+                            cx="100"
+                            cy="100"
+                            r="80"
+                            className="progress-value"
+                            style={{ strokeDashoffset: progressDashOffset }}
+                        />
+                    </svg>
+                    <div className="progress-center">
                         <strong>{completionRate}%</strong>
+                        <span>Project Ended</span>
                     </div>
-                    <div className="completion-details">
-                        <span className="stat-label">Completion rate</span>
-                        <p>Tasks completed this week are reflected here.</p>
+                </div>
+                <div className="project-progress-info">
+                    <h2>Project Progress</h2>
+                    <p>Tasks completed this week are reflected here.</p>
+                    <div className="progress-legend">
+                        <div className="legend-item">
+                            <span className="legend-dot legend-completed" />
+                            Completed
+                        </div>
+                        <div className="legend-item">
+                            <span className="legend-dot legend-progress" />
+                            In Progress
+                        </div>
+                        <div className="legend-item">
+                            <span className="legend-dot legend-pending" />
+                            Pending
+                        </div>
                     </div>
-                    <div className="calendar-widget">
-                        <span className="calendar-day">{calendarDay}</span>
-                        <span className="calendar-month">{calendarMonth}</span>
-                        <span className="calendar-year">{calendarYear}</span>
+                </div>
+                <div className="calendar-panel">
+                    <span className="calendar-label">Today</span>
+                    <div className="calendar-box">
+                        <span className="calendar-day-big">{calendarDay}</span>
+                        <span className="calendar-day-name">{calendarDayName}</span>
+                        <span className="calendar-month-year">{calendarMonth} {calendarYear}</span>
                     </div>
                 </div>
             </section>
@@ -375,6 +430,15 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
                             value={form.description}
                             onChange={handleChange}
                             placeholder="Describe the task in detail"
+                        />
+                    </label>
+                    <label>
+                        Deadline <span className="optional">(optional)</span>
+                        <input
+                            name="deadline"
+                            type="date"
+                            value={form.deadline}
+                            onChange={handleChange}
                         />
                     </label>
                     <label>
@@ -487,6 +551,15 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
                                             ))}
                                         </select>
                                     </label>
+                                    <label>
+                                        Deadline <span className="optional">(optional)</span>
+                                        <input
+                                            name="deadline"
+                                            type="date"
+                                            value={editForm.deadline}
+                                            onChange={handleEditFormChange}
+                                        />
+                                    </label>
                                     <div className="edit-actions">
                                         <button className="primary-button" onClick={() => handleSaveEdit(task.id)} disabled={saving}>
                                             Save
@@ -501,7 +574,10 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
                                     <h3>{task.title}</h3>
                                     <p>{task.description || "No description provided."}</p>
                                     <div className="task-card-footer">
-                                        <small>Created on {new Date(task.createdAt).toLocaleDateString()}</small>
+                                        <small>
+                                            Created on {new Date(task.createdAt).toLocaleDateString()}
+                                            {task.deadline ? ` · Due by ${new Date(task.deadline).toLocaleDateString()}` : ""}
+                                        </small>
                                         <button className="delete-button" onClick={() => handleDeleteTask(task.id)}>
                                             Delete
                                         </button>

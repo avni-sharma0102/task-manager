@@ -105,24 +105,31 @@ app.get("/tasks", authenticate, (req, res) => {
         .sort((a, b) => {
             const value = priorityOrder[b.priority] - priorityOrder[a.priority];
             if (value !== 0) return value;
+
+            const aDeadline = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+            const bDeadline = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+            if (aDeadline !== bDeadline) return aDeadline - bDeadline;
+
             return new Date(b.createdAt) - new Date(a.createdAt);
         });
     res.json(userTasks);
 });
 
 app.post("/tasks", authenticate, (req, res) => {
-    const { title, description = "", priority = "Medium" } = req.body;
+    const { title, description = "", priority = "Medium", deadline } = req.body;
     if (!title) {
         return res.status(400).json({ message: "Title is required." });
     }
 
     const validPriority = ["High", "Medium", "Low"].includes(priority) ? priority : "Medium";
+    const validDeadline = typeof deadline === "string" && deadline.trim() !== "" ? deadline : null;
     const task = {
         id: tasks.length + 1,
         userId: req.user.id,
         title,
         description,
         priority: validPriority,
+        deadline: validDeadline,
         isCompleted: false,
         createdAt: new Date().toISOString(),
     };
@@ -139,12 +146,15 @@ app.put("/tasks/:id", authenticate, (req, res) => {
         return res.status(404).json({ message: "Task not found." });
     }
 
-    const { title, description, isCompleted, priority } = req.body;
+    const { title, description, isCompleted, priority, deadline } = req.body;
     if (typeof title === "string") task.title = title;
     if (typeof description === "string") task.description = description;
     if (typeof isCompleted === "boolean") task.isCompleted = isCompleted;
     if (typeof priority === "string" && ["High", "Medium", "Low"].includes(priority)) {
         task.priority = priority;
+    }
+    if (typeof deadline === "string") {
+        task.deadline = deadline.trim() ? deadline : null;
     }
 
     res.json(task);
