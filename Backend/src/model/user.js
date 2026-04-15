@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-let userSchema = mongoose.Schema({
+const userSchema = mongoose.Schema({
     username:{
         type:String,
         required:true
@@ -15,7 +15,7 @@ let userSchema = mongoose.Schema({
         type:String,
         required:true
     }
-})
+}, { timestamps: true })
 
 let user = mongoose.model('user' , userSchema)
 

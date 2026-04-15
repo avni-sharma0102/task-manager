@@ -7,23 +7,23 @@ let taskSchema = mongoose.Schema({
     },
     priority:{
         type:String,
-        enum:["High","medium" , "low"],
+        enum:["High","Medium","Low"],
         required:true
     },
     status:{
         type:String,
-        enum:["Pending","Completed" , "In progress"],
-        default:"In progress"
+        enum:["Pending","Completed","In Progress"],
+        default:"In Progress"
     },
     duedate:{
         type:Date
     },
-    user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
     }
-})
+}, { timestamps: true });
 
 let task = mongoose.model('task' , taskSchema)
 
