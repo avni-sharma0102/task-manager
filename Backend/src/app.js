@@ -52,7 +52,7 @@ app.post("/login" , async (req , res)=>{
         if(!email || !password)
         {
             return res.status(400).json({
-                "message":"please fill all the imformations"
+                "message":"please fill all the details"
             })
         }
         const existUser = await user.findOne({ email })
