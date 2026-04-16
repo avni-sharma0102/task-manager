@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import dateparser
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
 import os
@@ -14,6 +15,15 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 app = FastAPI(title="AI Task Manager Demo")
+
+# Enable CORS for local frontend access (e.g., file:// or localhost) and other clients
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 tasks_db = []
 
@@ -102,28 +112,119 @@ User message:
 {text}
 """
 
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0,
-        response_format={"type": "json_object"}
-    )
+    def _text_extract(task_text):
+        # 1) normalize code fences
+        task_text = task_text.strip()
+        if task_text.startswith("```") and task_text.endswith("```"):
+            task_text = task_text[3:-3].strip()
 
-    content = response.choices[0].message.content
+        # 2) parse JSON block from output
+        json_text = None
+        if task_text.startswith("[") or task_text.startswith("{"):
+            json_text = task_text
+        else:
+            match = re.search(r"(```json\n)?(\[.*?\]|\{.*?\})(```)?", task_text, flags=re.S)
+            if match:
+                json_text = match.group(2)
+
+        if json_text:
+            try:
+                parsed = json.loads(json_text)
+                if isinstance(parsed, dict) and "tasks" in parsed:
+                    return parsed["tasks"]
+                if isinstance(parsed, list):
+                    return parsed
+            except Exception as e:
+                print("LLM JSON parse failed:", e)
+
+        # 3) loose fallback itemization (if human-readable content is returned)
+        fallback = []
+        for line in task_text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if line.lower().startswith("task:"):
+                task_name = line.split("task:", 1)[1].strip()
+                deadline = "none"
+                duration_hours = 1
+                priority = "medium"
+
+                if "deadline:" in task_name:
+                    task_name, deadline_part = task_name.split("deadline:", 1)
+                    task_name = task_name.strip()
+                    deadline = deadline_part.strip() or "none"
+
+                if "duration_hours:" in deadline:
+                    deadline, dur_part = deadline.split("duration_hours:", 1)
+                    deadline = deadline.strip() or "none"
+                    digits = re.sub(r"\D", "", dur_part)
+                    duration_hours = int(digits) if digits else 1
+
+                if "priority:" in deadline:
+                    deadline_part, priority_part = deadline.split("priority:", 1)
+                    deadline = deadline_part.strip() or "none"
+                    priority = priority_part.strip().lower() or "medium"
+
+                fallback.append({
+                    "task": task_name,
+                    "deadline": deadline,
+                    "duration_hours": duration_hours,
+                    "priority": priority
+                })
+
+        if fallback:
+            return fallback
+
+        # fallback simple phrase extraction for undifferentiated text
+        words = re.split(r"[;,\n]| and ", task_text)
+        simple_fallback = []
+        for item in words:
+            item = item.strip()
+            if not item:
+                continue
+            # avoid picking up empty/incomplete tokens
+            if len(item) < 2:
+                continue
+            # avoid numeric only
+            if item.isdigit():
+                continue
+            simple_fallback.append({
+                "task": item,
+                "deadline": "none",
+                "duration_hours": 1,
+                "priority": "medium"
+            })
+
+        return simple_fallback
+
+    if not os.getenv("GROQ_API_KEY"):
+        print("GROQ_API_KEY missing; using local fallback parser")
+        return _text_extract(text)
 
     try:
-        data = json.loads(content)
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            response_format={"type": "json_object"}
+        )
+    except Exception as e:
+        print("LLM request error:", e)
+        return _text_extract(text)
 
-        if isinstance(data, dict) and "tasks" in data:
-            return data["tasks"]
+    content = ""
+    try:
+        content = response.choices[0].message.content
+    except Exception as e:
+        print("Unexpected LLM response structure:", e, response)
+        return _text_extract(text)
 
-        if isinstance(data, list):
-            return data
+    tasks = _text_extract(content)
+    if not tasks:
+        print("LLM parsed no tasks, using user text fallback")
+        tasks = _text_extract(text)
 
-        return []
-
-    except Exception:
-        return []
+    return tasks
 
 
 # -----------------------

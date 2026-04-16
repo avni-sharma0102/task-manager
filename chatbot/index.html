@@ -202,6 +202,10 @@
                     body: JSON.stringify({ message })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                }
+
                 const data = await response.json();
 
                 if (data.error) {
@@ -232,6 +236,11 @@
 
             try {
                 const response = await fetch(`${API_BASE}/tasks`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                }
+
                 const tasks = await response.json();
 
                 if (tasks.length === 0) {
@@ -267,6 +276,11 @@
 
             try {
                 const response = await fetch(`${API_BASE}/schedule`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                }
+
                 const schedule = await response.json();
 
                 if (schedule.length === 0) {
