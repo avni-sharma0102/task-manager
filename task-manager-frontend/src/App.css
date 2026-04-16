@@ -345,10 +345,12 @@ textarea {
 
 .progress-value {
     stroke: #4ade80;
-    stroke-linecap: butt;
+    stroke-linecap: round;
     stroke-dasharray: 502.6548245743669;
-    stroke-dashoffset: 502.6548245743669;
     transition: stroke-dashoffset 0.5s ease;
+
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
 }
 
 .progress-center {

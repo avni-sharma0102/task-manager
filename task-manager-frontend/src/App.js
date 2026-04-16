@@ -199,7 +199,7 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
     }).length;
     const completionRate = taskCount ? Math.round((completedCount / taskCount) * 100) : 0;
     const inProgressCount = Math.max(0, taskCount - completedCount - overdueCount);
-    const progressArcLength = 2 * Math.PI * 100;
+    const progressArcLength = 2 * Math.PI * 80;
     const progressDashOffset = progressArcLength * (1 - completionRate / 100);
     const now = new Date();
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -354,21 +354,6 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
 
             <section className="completion-summary project-progress-card">
                 <div className="progress-chart-wrapper">
-                    <svg viewBox="0 0 200 200" className="progress-chart" aria-hidden="true">
-                        <circle
-                            cx="100"
-                            cy="100"
-                            r="80"
-                            className="progress-track"
-                        />
-                        <circle
-                            cx="100"
-                            cy="100"
-                            r="80"
-                            className="progress-value"
-                            style={{ strokeDashoffset: progressDashOffset }}
-                        />
-                    </svg>
                     <div className="progress-center">
                         <strong>{completionRate}%</strong>
                         <span>Project Ended</span>
