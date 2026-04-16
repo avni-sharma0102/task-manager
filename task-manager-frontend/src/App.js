@@ -357,7 +357,7 @@ function Dashboard({ user, token, onLogout, theme, toggleTheme }) {
                     <div className="progress-center">
                         <strong>{completionRate}%</strong>
                         <span>Project Ended</span>
-                    </div>
+                    </div> 
                 </div>
                 <div className="project-progress-info">
                     <h2>Project Progress</h2>
