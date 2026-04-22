@@ -1,0 +1,28 @@
+/* Task Card - Minimal */
+.task-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-header { display:flex; align-items:center; justify-content:space-between; gap:10px }
+.task-title { font-size:15px; font-weight:600; color:var(--text-h); margin:0 }
+.task-actions { display:flex; gap:8px }
+.icon-btn { background:transparent; border:1px solid var(--border); padding:6px 8px; border-radius:6px; cursor:pointer; color:var(--text-h); font-size:13px }
+
+.task-body { display:flex; flex-direction:column; gap:8px }
+.priority-badge { padding:6px 10px; border-radius:6px; font-size:12px; font-weight:700; color:var(--text-h); background:transparent }
+.status-badge { padding:6px 10px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid var(--border); color:var(--text) }
+.task-duedate { font-size:13px; color:var(--text) }
+
+.task-footer { margin-top:8px; border-top:1px solid var(--border); padding-top:10px }
+.status-buttons { display:flex; gap:8px }
+.status-btn { padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:transparent; color:var(--text); font-weight:600; cursor:pointer }
+
+.edit-form input, .edit-form select { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; }
+
+@media (max-width:768px){ .task-card{ padding:12px } .task-title{ font-size:14px } }

@@ -1,0 +1,83 @@
+/* Navbar Component - Minimal */
+.navbar {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.navbar-brand h1 {
+  font-size: 18px;
+  margin: 0;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.user-email {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--text-h);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-h);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 10px 14px;
+    gap: 12px;
+  }
+
+  .navbar-brand h1 {
+    font-size: 16px;
+  }
+
+  .navbar-center {
+    display: none;
+  }
+
+  .user-email {
+    display: none;
+  }
+}

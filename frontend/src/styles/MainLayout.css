@@ -1,0 +1,27 @@
+/* ============ MAIN LAYOUT ============ */
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: margin-left 0.3s ease;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    margin-left: 0;
+  }
+}

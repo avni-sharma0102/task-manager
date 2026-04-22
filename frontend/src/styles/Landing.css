@@ -1,0 +1,54 @@
+/* Landing page - Minimal & professional */
+.landing-root { color: var(--text); background: var(--bg); }
+
+/* Full-bleed hero: breaks out of centered #root and spans the viewport */
+.landing-hero {
+	width: 100vw;
+	position: relative;
+	left: 50%;
+	right: 50%;
+	margin-left: -50vw;
+	margin-right: -50vw;
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	padding: 80px 20px;
+	box-sizing: border-box;
+	background: linear-gradient(180deg, rgba(0,0,0,0.02), transparent 40%);
+}
+
+/* When landing is active remove app container constraints */
+.landing-active #root {
+	width: 100% !important;
+	max-width: 100% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border-inline: none !important;
+}
+
+.landing-active body {
+	background: var(--bg) !important;
+}
+
+.hero-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 32px; width: 100%; }
+
+.hero-content { flex:1; max-width:640px }
+.hero-title { font-size:32px; margin:0 0 12px; color:var(--text-h); font-weight:700 }
+.hero-sub { margin:0 0 20px; color:var(--text); font-size:15px }
+.hero-actions { display:flex; gap:12px }
+.btn { padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-h); cursor:pointer; font-weight:600 }
+.btn-primary { background:var(--accent); border-color:transparent; color:white }
+.hero-visual { flex:0 0 360px; display:flex; align-items:center; justify-content:center }
+
+.landing-features { padding:36px 20px 60px; border-top:1px solid var(--border); }
+.container { max-width:1000px; margin:0 auto }
+.section-title { font-size:20px; color:var(--text-h); margin:0 0 6px }
+.section-sub { margin:0 0 20px; color:var(--text) }
+.features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px }
+.feature { background:var(--bg); border:1px solid var(--border); padding:18px; border-radius:8px }
+.feature h3 { margin:0 0 8px; font-size:15px; color:var(--text-h) }
+.feature p { margin:0; color:var(--text); font-size:13px }
+
+.landing-footer { border-top:1px solid var(--border); padding:18px 20px; color:var(--text); text-align:center }
+
+@media (max-width:900px){ .landing-hero{flex-direction:column; padding:40px 16px} .hero-visual{order:-1;margin-bottom:18px} .features-grid{grid-template-columns:1fr} }

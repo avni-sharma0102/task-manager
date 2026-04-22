@@ -3,11 +3,16 @@ let tasks = require("./model/tasks")
 let user = require('./model/user')
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const cors = require("cors");
 const auth = require("./Middleware/auth");
 
-
-
 let app = express()
+
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
+
 app.use(express.json())
 
 app.post("/register" , async (req,res)=>{

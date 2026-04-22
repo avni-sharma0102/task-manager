@@ -1,0 +1,69 @@
+.chatbot {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1200;
+  font-family: inherit;
+}
+
+.chat-toggle {
+  background: linear-gradient(135deg,var(--primary), #5b21b6);
+  color: white;
+  border: none;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(11, 12, 20, 0.5);
+}
+.chat-toggle svg { color: white }
+
+.chat-panel {
+  width: 360px;
+  height: 460px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  margin-top: 12px;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chatbot.open .chat-panel { display: flex; }
+
+.chat-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+
+.chat-close { background: transparent; border: none; color: var(--text); font-size:18px; cursor:pointer }
+
+.chat-messages { padding: 12px; flex: 1; overflow: auto; font-size:13px; color:var(--text-primary) }
+.chat-empty { color: var(--text-secondary); font-size:13px; }
+.chat-message { margin-bottom:10px }
+.chat-message.user pre { background: transparent; color: var(--text-primary); font-weight:600; margin:0 }
+.chat-message.bot pre { background: transparent; color: var(--text); margin:0; white-space:pre-wrap }
+
+.chat-input { padding: 10px; border-top: 1px solid var(--border-color); display:flex; flex-direction:column; gap:8px }
+.chat-input textarea { width:100%; resize:vertical; padding:8px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary) }
+.chat-actions { display:flex; gap:8px; justify-content:flex-end }
+
+@media (max-width: 900px) {
+  .chatbot { right: 12px; bottom: 12px }
+  .chat-toggle { width:48px; height:48px }
+  .chat-panel { width: 92vw; right: 4vw; left: 4vw; border-radius: 10px; height: 66vh }
+}
+
+@media (max-width: 480px) {
+  .chatbot { right: 0; left: 0; bottom: 0; display:flex; justify-content:center }
+  .chat-toggle { position: relative; bottom: 12px; box-shadow: 0 6px 20px rgba(11, 12, 20, 0.5) }
+  .chat-panel { width: 100%; left: 0; right: 0; border-radius: 12px 12px 0 0; height: 70vh }
+}
